@@ -51,7 +51,10 @@ class PetTypeService {
   }
 
   Future<void> updatePetType(PetType petType) async {
-    await _apiClient.putJson('pettypes/${petType.id}', petType.toJson()); // Fix: use toJson() to include id in request body
+    await _apiClient.putJson(
+      'pettypes/${petType.id}',
+      petType.toJson(),
+    ); // Fix: use toJson() to include id in request body
   }
 
   Future<void> deletePetType(int typeId) async {

@@ -136,6 +136,6 @@ an advisory Semgrep scan, and CodeQL analysis for workflow security.
 
 ## Contributing
 
-The [issue tracker](https://github.com/San-43/spring-petclinic-flutter/issues) is the preferred channel for bug reports, feature requests, and submitting pull requests.
+The [issue tracker](https://github.com/San-43/spring-petclinic-flutter/issues) is the preferred channel for reporting bugs and proposing new features.
 
-For pull requests, please keep the existing Flutter and Dart code style and make sure the validation commands listed above pass before submitting changes.
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines, including the pull request process and contribution workflow.

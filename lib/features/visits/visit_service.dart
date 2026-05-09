@@ -22,6 +22,20 @@ class VisitService {
 
   final ApiClient _apiClient;
 
+  Future<List<Visit>> listVisits() async {
+    try {
+      final data = await _apiClient.getJson('visits') as List<dynamic>;
+      return data
+          .map((item) => Visit.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
+  }
+
   Future<Visit> getVisit(int visitId) async {
     final data =
         await _apiClient.getJson('visits/$visitId') as Map<String, dynamic>;

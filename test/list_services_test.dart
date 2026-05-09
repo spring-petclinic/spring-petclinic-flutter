@@ -18,9 +18,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:spring_petclinic_flutter/features/owners/owner_service.dart';
+import 'package:spring_petclinic_flutter/features/pets/pet_service.dart';
 import 'package:spring_petclinic_flutter/features/pettypes/pet_type_service.dart';
 import 'package:spring_petclinic_flutter/features/specialties/specialty_service.dart';
 import 'package:spring_petclinic_flutter/features/vets/vet_service.dart';
+import 'package:spring_petclinic_flutter/features/visits/visit_service.dart';
 import 'package:spring_petclinic_flutter/shared/network/api_client.dart';
 
 void main() {
@@ -54,6 +56,33 @@ void main() {
       expect(vets, isEmpty);
     });
 
+    test('PetService returns an empty list on 404', () async {
+      final service = PetService(
+        apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),
+      );
+
+      final pets = await service.listPets();
+
+      expect(pets, isEmpty);
+    });
+
+    test('PetService returns a list of pets on success', () async {
+      final service = PetService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response(
+            '[{"id": 1, "name": "Luna", "birthDate": "2020-01-01", "type": {"id": 1, "name": "cat"}}]',
+            200,
+          ),
+        ),
+      );
+
+      final pets = await service.listPets();
+
+      expect(pets, hasLength(1));
+      expect(pets.first.name, 'Luna');
+      expect(pets.first.type.name, 'cat');
+    });
+
     test('PetTypeService returns an empty list on 404', () async {
       final service = PetTypeService(
         apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),
@@ -72,6 +101,32 @@ void main() {
       final specialties = await service.listSpecialties();
 
       expect(specialties, isEmpty);
+    });
+
+    test('VisitService returns an empty list on 404', () async {
+      final service = VisitService(
+        apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),
+      );
+
+      final visits = await service.listVisits();
+
+      expect(visits, isEmpty);
+    });
+
+    test('VisitService returns a list of visits on success', () async {
+      final service = VisitService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response(
+            '[{"id": 1, "date": "2023-01-01", "description": "regular checkup"}]',
+            200,
+          ),
+        ),
+      );
+
+      final visits = await service.listVisits();
+
+      expect(visits, hasLength(1));
+      expect(visits.first.description, 'regular checkup');
     });
 
     test('detail endpoints still surface 404 as an error', () async {

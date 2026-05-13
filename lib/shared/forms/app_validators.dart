@@ -17,6 +17,8 @@
 typedef StringValidator = String? Function(String? value);
 
 class AppValidators {
+  static const int petMaximumAgeYears = 50;
+
   static StringValidator compose(List<StringValidator> validators) {
     return (value) {
       for (final validator in validators) {
@@ -145,5 +147,62 @@ class AppValidators {
       }
       return null;
     };
+  }
+
+  static StringValidator petBirthDate(String fieldName, {DateTime? today}) {
+    return (value) {
+      final text = value?.trim() ?? '';
+      if (text.isEmpty) {
+        return '$fieldName is required.';
+      }
+
+      final birthDate = _parseApiDate(text);
+      if (birthDate == null) {
+        return '$fieldName must be a valid date.';
+      }
+
+      final currentDate = _dateOnly(today ?? DateTime.now());
+      if (birthDate.isAfter(currentDate)) {
+        return '$fieldName cannot be in the future.';
+      }
+
+      if (birthDate.isBefore(minimumPetBirthDate(currentDate))) {
+        return '$fieldName cannot be older than $petMaximumAgeYears years.';
+      }
+
+      return null;
+    };
+  }
+
+  static DateTime minimumPetBirthDate(DateTime today) {
+    final currentDate = _dateOnly(today);
+    final targetYear = currentDate.year - petMaximumAgeYears;
+    final lastDayOfTargetMonth = DateTime(
+      targetYear,
+      currentDate.month + 1,
+      0,
+    ).day;
+    final targetDay = currentDate.day > lastDayOfTargetMonth
+        ? lastDayOfTargetMonth
+        : currentDate.day;
+    return DateTime(targetYear, currentDate.month, targetDay);
+  }
+
+  static DateTime? _parseApiDate(String text) {
+    try {
+      final parsed = DateTime.parse(text);
+      final dateOnly = _dateOnly(parsed);
+      final formatted =
+          '${dateOnly.year.toString().padLeft(4, '0')}-'
+          '${dateOnly.month.toString().padLeft(2, '0')}-'
+          '${dateOnly.day.toString().padLeft(2, '0')}';
+      return formatted == text ? dateOnly : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static DateTime _dateOnly(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
   }
 }

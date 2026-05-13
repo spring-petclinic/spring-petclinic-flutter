@@ -33,4 +33,40 @@ void main() {
       expect(validator('12345abcde'), 'Telephone must contain digits only.');
     });
   });
+
+  group('AppValidators.petBirthDate', () {
+    final today = DateTime(2026, 5, 13);
+    late StringValidator validator;
+
+    setUp(() {
+      validator = AppValidators.petBirthDate('Birth date', today: today);
+    });
+
+    test('accepts a date within the last 50 years', () {
+      expect(validator('2020-01-01'), isNull);
+    });
+
+    test('accepts exactly 50 years ago', () {
+      expect(validator('1976-05-13'), isNull);
+    });
+
+    test('rejects a missing date', () {
+      expect(validator(''), 'Birth date is required.');
+    });
+
+    test('rejects an invalid date value', () {
+      expect(validator('2020-02-30'), 'Birth date must be a valid date.');
+    });
+
+    test('rejects a future date', () {
+      expect(validator('2026-05-14'), 'Birth date cannot be in the future.');
+    });
+
+    test('rejects a date older than 50 years', () {
+      expect(
+        validator('1976-05-12'),
+        'Birth date cannot be older than 50 years.',
+      );
+    });
+  });
 }

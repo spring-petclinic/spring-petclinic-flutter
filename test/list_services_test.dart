@@ -46,6 +46,112 @@ void main() {
       expect(owners, isEmpty);
     });
 
+    test('OwnerService.listOwnersPage maps a successful page', () async {
+      final service = OwnerService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response('''
+            {
+              "content": [
+                {
+                  "id": 1,
+                  "firstName": "George",
+                  "lastName": "Franklin",
+                  "address": "110 W. Liberty St.",
+                  "city": "Madison",
+                  "telephone": "6085551023",
+                  "pets": []
+                }
+              ],
+              "page": 0,
+              "size": 5,
+              "totalElements": 10,
+              "totalPages": 2
+            }
+            ''', 200),
+        ),
+      );
+
+      final ownersPage = await service.listOwnersPage(page: 0, size: 5);
+
+      expect(ownersPage.content, hasLength(1));
+      expect(ownersPage.content.first.fullName, 'George Franklin');
+      expect(ownersPage.page, 0);
+      expect(ownersPage.size, 5);
+      expect(ownersPage.totalElements, 10);
+      expect(ownersPage.totalPages, 2);
+    });
+
+    test(
+      'OwnerService.listOwnersPage sends v2 path and query params',
+      () async {
+        final service = OwnerService(
+          apiClient: buildApiClient(
+            handler: (request) async {
+              expect(request.url.path, '/v2/owners');
+              expect(request.url.queryParameters['lastName'], 'Dav');
+              expect(request.url.queryParameters['page'], '1');
+              expect(request.url.queryParameters['size'], '5');
+
+              return http.Response('''
+              {
+                "content": [],
+                "page": 1,
+                "size": 5,
+                "totalElements": 0,
+                "totalPages": 0
+              }
+              ''', 200);
+            },
+          ),
+        );
+
+        await service.listOwnersPage(lastName: 'Dav', page: 1, size: 5);
+      },
+    );
+
+    test('OwnerService.listOwnersPage maps empty page content', () async {
+      final service = OwnerService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response('''
+            {
+              "content": [],
+              "page": 0,
+              "size": 5,
+              "totalElements": 0,
+              "totalPages": 0
+            }
+            ''', 200),
+        ),
+      );
+
+      final ownersPage = await service.listOwnersPage(page: 0, size: 5);
+
+      expect(ownersPage.content, isEmpty);
+      expect(ownersPage.page, 0);
+      expect(ownersPage.size, 5);
+      expect(ownersPage.totalElements, 0);
+      expect(ownersPage.totalPages, 0);
+    });
+
+    test('OwnerService.listOwnersPage surfaces API errors', () async {
+      final service = OwnerService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response('Server error', 500),
+        ),
+      );
+
+      expect(
+        service.listOwnersPage(page: 0, size: 5),
+        throwsA(
+          isA<ApiException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            500,
+          ),
+        ),
+      );
+    });
+
     test('VetService returns an empty list on 404', () async {
       final service = VetService(
         apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),

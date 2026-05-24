@@ -33,12 +33,17 @@ class OwnerListScreen extends StatefulWidget {
 }
 
 class _OwnerListScreenState extends State<OwnerListScreen> {
+  static const int _ownersPageSize = 5;
+
   late final OwnerService _ownerService = widget.ownerService ?? OwnerService();
   final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = true;
   String? _errorMessage;
   String _activeQuery = '';
+  int _currentPage = 0;
+  int _totalPages = 0;
+  int _totalElements = 0;
   List<Owner> _owners = const [];
 
   @override
@@ -53,22 +58,42 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
     super.dispose();
   }
 
-  Future<void> _loadOwners({String? lastName}) async {
+  bool get _hasPages => _totalElements > 0 && _totalPages > 0;
+
+  bool get _canGoPrevious => _currentPage > 0;
+
+  bool get _canGoNext => _hasPages && _currentPage < _totalPages - 1;
+
+  String get _pageLabel {
+    final displayPage = _hasPages ? _currentPage + 1 : 0;
+    return 'Page $displayPage of $_totalPages';
+  }
+
+  Future<void> _loadOwners({String? lastName, int? page}) async {
+    final requestedQuery = lastName?.trim() ?? _activeQuery;
+    final requestedPage = page ?? _currentPage;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _activeQuery = lastName?.trim() ?? '';
+      _activeQuery = requestedQuery;
+      _currentPage = requestedPage;
     });
 
     try {
-      final owners = await _ownerService.listOwners(
-        lastName: _activeQuery.isEmpty ? null : _activeQuery,
+      final ownersPage = await _ownerService.listOwnersPage(
+        lastName: requestedQuery.isEmpty ? null : requestedQuery,
+        page: requestedPage,
+        size: _ownersPageSize,
       );
       if (!mounted) {
         return;
       }
       setState(() {
-        _owners = owners;
+        _owners = ownersPage.content;
+        _currentPage = ownersPage.page;
+        _totalPages = ownersPage.totalPages;
+        _totalElements = ownersPage.totalElements;
       });
     } catch (error) {
       if (!mounted) {
@@ -89,15 +114,29 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
   Future<void> _openOwnerForm() async {
     final changed = await context.push<bool>(AppRoutes.ownerNew);
     if (changed == true) {
-      await _loadOwners(lastName: _activeQuery);
+      await _loadOwners();
     }
   }
 
   Future<void> _openOwnerDetail(Owner owner) async {
     final changed = await context.push<bool>(AppRoutes.owner(owner.id!));
     if (changed == true) {
-      await _loadOwners(lastName: _activeQuery);
+      await _loadOwners();
     }
+  }
+
+  Future<void> _goToPreviousPage() async {
+    if (!_canGoPrevious) {
+      return;
+    }
+    await _loadOwners(page: _currentPage - 1);
+  }
+
+  Future<void> _goToNextPage() async {
+    if (!_canGoNext) {
+      return;
+    }
+    await _loadOwners(page: _currentPage + 1);
   }
 
   @override
@@ -116,8 +155,12 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                 child: _SearchOwnersForm(
                   controller: _searchController,
                   compact: compact,
-                  onSearch: () =>
-                      _loadOwners(lastName: _searchController.text.trim()),
+                  onSearch: () {
+                    _loadOwners(
+                      lastName: _searchController.text.trim(),
+                      page: 0,
+                    );
+                  },
                 ),
               ),
               Expanded(child: _buildContent()),
@@ -142,7 +185,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
           Align(
             alignment: Alignment.center,
             child: FilledButton(
-              onPressed: () => _loadOwners(lastName: _activeQuery),
+              onPressed: () => _loadOwners(),
               child: const Text('Retry'),
             ),
           ),
@@ -158,7 +201,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
           ? 'Add an owner to get started.'
           : 'Try a different last name or add a new owner.';
       return RefreshIndicator(
-        onRefresh: () => _loadOwners(lastName: _activeQuery),
+        onRefresh: () => _loadOwners(),
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
           children: [
@@ -173,7 +216,7 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => _loadOwners(lastName: _activeQuery),
+      onRefresh: () => _loadOwners(),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
@@ -193,6 +236,23 @@ class _OwnerListScreenState extends State<OwnerListScreen> {
                 ),
               );
             },
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                onPressed: _canGoPrevious ? _goToPreviousPage : null,
+                child: const Text('Previous'),
+              ),
+              const SizedBox(width: 16),
+              Text(_pageLabel),
+              const SizedBox(width: 16),
+              OutlinedButton(
+                onPressed: _canGoNext ? _goToNextPage : null,
+                child: const Text('Next'),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
           Align(

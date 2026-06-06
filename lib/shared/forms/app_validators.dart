@@ -64,6 +64,54 @@ class AppValidators {
     };
   }
 
+  static StringValidator firstName(
+    String fieldName, {
+    required int minLength,
+    required int maxLength,
+  }) {
+    final pattern = RegExp(r"^[\p{L}]+([ '-][\p{L}]+){0,2}$", unicode: true);
+    return (value) {
+      final text = value?.trim() ?? '';
+      if (text.isEmpty) {
+        return '$fieldName is required.';
+      }
+      if (text.length < minLength) {
+        return '$fieldName must be at least $minLength character long.';
+      }
+      if (text.length > maxLength) {
+        return '$fieldName may be at most $maxLength characters long.';
+      }
+      if (!pattern.hasMatch(text)) {
+        return '$fieldName must contain letters only.';
+      }
+      return null;
+    };
+  }
+
+  static StringValidator lastName(
+    String fieldName, {
+    required int minLength,
+    required int maxLength,
+  }) {
+    final pattern = RegExp(r"^[\p{L}]+([ '-][\p{L}]+){0,2}\.?$", unicode: true);
+    return (value) {
+      final text = value?.trim() ?? '';
+      if (text.isEmpty) {
+        return '$fieldName is required.';
+      }
+      if (text.length < minLength) {
+        return '$fieldName must be at least $minLength character long.';
+      }
+      if (text.length > maxLength) {
+        return '$fieldName may be at most $maxLength characters long.';
+      }
+      if (!pattern.hasMatch(text)) {
+        return '$fieldName must contain letters only.';
+      }
+      return null;
+    };
+  }
+
   static StringValidator digitsOnly(
     String fieldName, {
     required int minLength,

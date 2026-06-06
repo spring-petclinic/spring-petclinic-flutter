@@ -219,7 +219,7 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
                           decoration: const InputDecoration(
                             labelText: 'First Name',
                           ),
-                          validator: AppValidators.plainText(
+                          validator: AppValidators.firstName(
                             'First name',
                             minLength: 1,
                             maxLength: 30,
@@ -232,7 +232,7 @@ class _OwnerFormScreenState extends State<OwnerFormScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Last Name',
                           ),
-                          validator: AppValidators.plainText(
+                          validator: AppValidators.lastName(
                             'Last name',
                             minLength: 1,
                             maxLength: 30,

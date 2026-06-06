@@ -11,6 +11,18 @@ the functional flows of the [Angular frontend](https://github.com/spring-petclin
 
 The CI status includes static analysis, tests, the web build, and the Android debug APK build.
 
+## Table of Contents
+
+- [Screenshots](#screenshots)
+- [Project Structure](#project-structure)
+- [Backend](#backend)
+- [API Configuration](#api-configuration)
+- [Run on Android](#run-on-android)
+- [Run on Web](#run-on-web)
+- [Build](#build)
+- [Validation](#validation)
+- [Contributing](#contributing)
+
 ## Screenshots
 
 ### Web
@@ -26,6 +38,31 @@ The CI status includes static analysis, tests, the web build, and the Android de
   <img src="docs/screenshots/mobile-home.jpeg" width="260" alt="Spring Petclinic home screen on Android" />
   <img src="docs/screenshots/mobile-owner-details.jpeg" width="260" alt="Spring Petclinic owner details screen on Android" />
 </p>
+
+## Project Structure
+
+The codebase follows a feature-first package structure under the `lib` directory:
+
+```text
+lib/
+├── features/          # Feature-specific modules (screens, services, models)
+│   ├── home/          # Home screen
+│   ├── owners/        # Owner management (list, details, form)
+│   ├── pets/          # Pet management (form)
+│   ├── pettypes/      # Pet type administration
+│   ├── specialties/   # Vet specialties administration
+│   ├── vets/          # Veterinarians list and forms
+│   └── visits/        # Pet visit registration and history
+├── shared/            # Common and shared components across features
+│   ├── config/        # Global configuration (e.g., API config)
+│   ├── forms/         # Generic form validators and text helpers
+│   ├── navigation/    # App routes and navigation extensions
+│   ├── network/       # HTTP/REST API client and exception handling
+│   ├── theme/         # App color schemes and typography
+│   ├── utils/         # Helper functions and formatting utilities
+│   └── widgets/       # Reusable layout and UI widgets
+└── main.dart          # App entry point
+```
 
 ## Backend
 

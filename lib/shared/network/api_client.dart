@@ -150,6 +150,19 @@ class ApiClient {
     try {
       final decoded = jsonDecode(responseBody);
       if (decoded is Map<String, dynamic>) {
+        // Surface the first useful validation message from
+        // schemaValidationErrors in ProblemDetail responses.
+        final schemaErrors = decoded['schemaValidationErrors'];
+        if (schemaErrors is List && schemaErrors.isNotEmpty) {
+          final first = schemaErrors.first;
+          if (first is Map<String, dynamic>) {
+            final fieldMsg = first['message'] ?? first['defaultMessage'];
+            if (fieldMsg is String && fieldMsg.isNotEmpty) {
+              return fieldMsg;
+            }
+          }
+        }
+
         for (final key in ['detail', 'message', 'title', 'error']) {
           final value = decoded[key];
           if (value is String && value.isNotEmpty) {

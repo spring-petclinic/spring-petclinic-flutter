@@ -16,6 +16,7 @@
 
 import '../../shared/network/api_client.dart';
 import 'owner.dart';
+import 'owner_page.dart';
 
 class OwnerService {
   OwnerService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
@@ -39,6 +40,24 @@ class OwnerService {
       }
       rethrow;
     }
+  }
+
+  Future<OwnerPage> listOwnersPage({
+    String? lastName,
+    required int page,
+    required int size,
+  }) async {
+    final data =
+        await _apiClient.getJson(
+              'v2/owners',
+              queryParameters: {
+                'lastName': lastName,
+                'page': page.toString(),
+                'size': size.toString(),
+              },
+            )
+            as Map<String, dynamic>;
+    return OwnerPage.fromJson(data);
   }
 
   Future<Owner> getOwner(int ownerId) async {

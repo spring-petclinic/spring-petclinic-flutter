@@ -18,9 +18,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:spring_petclinic_flutter/features/owners/owner_service.dart';
+import 'package:spring_petclinic_flutter/features/pets/pet_service.dart';
 import 'package:spring_petclinic_flutter/features/pettypes/pet_type_service.dart';
 import 'package:spring_petclinic_flutter/features/specialties/specialty_service.dart';
 import 'package:spring_petclinic_flutter/features/vets/vet_service.dart';
+import 'package:spring_petclinic_flutter/features/visits/visit_service.dart';
 import 'package:spring_petclinic_flutter/shared/network/api_client.dart';
 
 void main() {
@@ -44,6 +46,112 @@ void main() {
       expect(owners, isEmpty);
     });
 
+    test('OwnerService.listOwnersPage maps a successful page', () async {
+      final service = OwnerService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response('''
+            {
+              "content": [
+                {
+                  "id": 1,
+                  "firstName": "George",
+                  "lastName": "Franklin",
+                  "address": "110 W. Liberty St.",
+                  "city": "Madison",
+                  "telephone": "6085551023",
+                  "pets": []
+                }
+              ],
+              "page": 0,
+              "size": 5,
+              "totalElements": 10,
+              "totalPages": 2
+            }
+            ''', 200),
+        ),
+      );
+
+      final ownersPage = await service.listOwnersPage(page: 0, size: 5);
+
+      expect(ownersPage.content, hasLength(1));
+      expect(ownersPage.content.first.fullName, 'George Franklin');
+      expect(ownersPage.page, 0);
+      expect(ownersPage.size, 5);
+      expect(ownersPage.totalElements, 10);
+      expect(ownersPage.totalPages, 2);
+    });
+
+    test(
+      'OwnerService.listOwnersPage sends v2 path and query params',
+      () async {
+        final service = OwnerService(
+          apiClient: buildApiClient(
+            handler: (request) async {
+              expect(request.url.path, '/v2/owners');
+              expect(request.url.queryParameters['lastName'], 'Dav');
+              expect(request.url.queryParameters['page'], '1');
+              expect(request.url.queryParameters['size'], '5');
+
+              return http.Response('''
+              {
+                "content": [],
+                "page": 1,
+                "size": 5,
+                "totalElements": 0,
+                "totalPages": 0
+              }
+              ''', 200);
+            },
+          ),
+        );
+
+        await service.listOwnersPage(lastName: 'Dav', page: 1, size: 5);
+      },
+    );
+
+    test('OwnerService.listOwnersPage maps empty page content', () async {
+      final service = OwnerService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response('''
+            {
+              "content": [],
+              "page": 0,
+              "size": 5,
+              "totalElements": 0,
+              "totalPages": 0
+            }
+            ''', 200),
+        ),
+      );
+
+      final ownersPage = await service.listOwnersPage(page: 0, size: 5);
+
+      expect(ownersPage.content, isEmpty);
+      expect(ownersPage.page, 0);
+      expect(ownersPage.size, 5);
+      expect(ownersPage.totalElements, 0);
+      expect(ownersPage.totalPages, 0);
+    });
+
+    test('OwnerService.listOwnersPage surfaces API errors', () async {
+      final service = OwnerService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response('Server error', 500),
+        ),
+      );
+
+      expect(
+        service.listOwnersPage(page: 0, size: 5),
+        throwsA(
+          isA<ApiException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            500,
+          ),
+        ),
+      );
+    });
+
     test('VetService returns an empty list on 404', () async {
       final service = VetService(
         apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),
@@ -52,6 +160,33 @@ void main() {
       final vets = await service.listVets();
 
       expect(vets, isEmpty);
+    });
+
+    test('PetService returns an empty list on 404', () async {
+      final service = PetService(
+        apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),
+      );
+
+      final pets = await service.listPets();
+
+      expect(pets, isEmpty);
+    });
+
+    test('PetService returns a list of pets on success', () async {
+      final service = PetService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response(
+            '[{"id": 1, "name": "Luna", "birthDate": "2020-01-01", "type": {"id": 1, "name": "cat"}}]',
+            200,
+          ),
+        ),
+      );
+
+      final pets = await service.listPets();
+
+      expect(pets, hasLength(1));
+      expect(pets.first.name, 'Luna');
+      expect(pets.first.type.name, 'cat');
     });
 
     test('PetTypeService returns an empty list on 404', () async {
@@ -72,6 +207,32 @@ void main() {
       final specialties = await service.listSpecialties();
 
       expect(specialties, isEmpty);
+    });
+
+    test('VisitService returns an empty list on 404', () async {
+      final service = VisitService(
+        apiClient: buildApiClient(handler: (_) async => http.Response('', 404)),
+      );
+
+      final visits = await service.listVisits();
+
+      expect(visits, isEmpty);
+    });
+
+    test('VisitService returns a list of visits on success', () async {
+      final service = VisitService(
+        apiClient: buildApiClient(
+          handler: (_) async => http.Response(
+            '[{"id": 1, "date": "2023-01-01", "description": "regular checkup"}]',
+            200,
+          ),
+        ),
+      );
+
+      final visits = await service.listVisits();
+
+      expect(visits, hasLength(1));
+      expect(visits.first.description, 'regular checkup');
     });
 
     test('detail endpoints still surface 404 as an error', () async {

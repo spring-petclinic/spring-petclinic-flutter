@@ -139,12 +139,18 @@ class _PetFormScreenState extends State<PetFormScreen> {
   }
 
   Future<void> _pickBirthDate() async {
-    final initialDate = _selectedBirthDate ?? DateTime.now();
+    final now = DateTime.now();
+    final lastDate = DateTime(now.year, now.month, now.day);
+    final firstDate = AppValidators.minimumPetBirthDate(lastDate);
+    final initialDate = _birthDatePickerInitialDate(
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
     final selected = await showDatePicker(
       context: context,
       initialDate: initialDate,
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      firstDate: firstDate,
+      lastDate: lastDate,
     );
 
     if (selected == null || !mounted) {
@@ -155,6 +161,29 @@ class _PetFormScreenState extends State<PetFormScreen> {
       _selectedBirthDate = selected;
       _birthDateController.text = formatApiDate(selected);
     });
+  }
+
+  DateTime _birthDatePickerInitialDate({
+    required DateTime firstDate,
+    required DateTime lastDate,
+  }) {
+    final selectedBirthDate = _selectedBirthDate;
+    if (selectedBirthDate == null) {
+      return lastDate;
+    }
+
+    final selectedDate = DateTime(
+      selectedBirthDate.year,
+      selectedBirthDate.month,
+      selectedBirthDate.day,
+    );
+    if (selectedDate.isBefore(firstDate)) {
+      return firstDate;
+    }
+    if (selectedDate.isAfter(lastDate)) {
+      return lastDate;
+    }
+    return selectedDate;
   }
 
   Future<void> _save() async {
@@ -288,7 +317,7 @@ class _PetFormScreenState extends State<PetFormScreen> {
                             suffixIcon: Icon(Icons.calendar_today_outlined),
                           ),
                           onTap: _pickBirthDate,
-                          validator: AppValidators.required('Birth date'),
+                          validator: AppValidators.petBirthDate('Birth date'),
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<PetType>(

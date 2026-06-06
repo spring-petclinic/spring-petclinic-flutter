@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spring_petclinic_flutter/features/owners/owner.dart';
 import 'package:spring_petclinic_flutter/features/owners/owner_list_screen.dart';
+import 'package:spring_petclinic_flutter/features/owners/owner_page.dart';
 import 'package:spring_petclinic_flutter/features/owners/owner_service.dart';
 
 class FakeOwnerService extends OwnerService {
@@ -27,11 +28,21 @@ class FakeOwnerService extends OwnerService {
   final Object? error;
 
   @override
-  Future<List<Owner>> listOwners({String? lastName}) async {
+  Future<OwnerPage> listOwnersPage({
+    String? lastName,
+    required int page,
+    required int size,
+  }) async {
     if (error != null) {
       throw error!;
     }
-    return List<Owner>.unmodifiable(owners);
+    return OwnerPage(
+      content: List<Owner>.unmodifiable(owners),
+      page: page,
+      size: size,
+      totalElements: owners.length,
+      totalPages: owners.isEmpty ? 0 : 1,
+    );
   }
 }
 

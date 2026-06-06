@@ -22,6 +22,20 @@ class PetService {
 
   final ApiClient _apiClient;
 
+  Future<List<Pet>> listPets() async {
+    try {
+      final data = await _apiClient.getJson('pets') as List<dynamic>;
+      return data
+          .map((item) => Pet.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) {
+        return const [];
+      }
+      rethrow;
+    }
+  }
+
   Future<Pet> getPet(int petId) async {
     final data =
         await _apiClient.getJson('pets/$petId') as Map<String, dynamic>;

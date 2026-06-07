@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:spring_petclinic_flutter/features/owners/owner_service.dart';
 import 'package:spring_petclinic_flutter/features/pets/pet_service.dart';
+import 'package:spring_petclinic_flutter/features/pettypes/pet_type.dart';
 import 'package:spring_petclinic_flutter/features/pettypes/pet_type_service.dart';
 import 'package:spring_petclinic_flutter/features/specialties/specialty_service.dart';
 import 'package:spring_petclinic_flutter/features/vets/vet_service.dart';
@@ -251,5 +254,28 @@ void main() {
         ),
       );
     });
+
+    test(
+      'PetTypeService.updatePetType sends both id and name in PUT body',
+      () async {
+        late Map<String, dynamic> capturedBody;
+
+        final service = PetTypeService(
+          apiClient: buildApiClient(
+            handler: (request) async {
+              expect(request.method, 'PUT');
+              expect(request.url.path, '/pettypes/3');
+              capturedBody = jsonDecode(request.body) as Map<String, dynamic>;
+              return http.Response('', 204);
+            },
+          ),
+        );
+
+        await service.updatePetType(const PetType(id: 3, name: 'hamster'));
+
+        expect(capturedBody, containsPair('id', 3));
+        expect(capturedBody, containsPair('name', 'hamster'));
+      },
+    );
   });
 }

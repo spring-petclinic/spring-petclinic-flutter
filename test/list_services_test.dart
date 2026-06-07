@@ -265,8 +265,7 @@ void main() {
             handler: (request) async {
               expect(request.method, 'PUT');
               expect(request.url.path, '/pettypes/3');
-              capturedBody =
-                  jsonDecode(request.body) as Map<String, dynamic>;
+              capturedBody = jsonDecode(request.body) as Map<String, dynamic>;
               return http.Response('', 204);
             },
           ),

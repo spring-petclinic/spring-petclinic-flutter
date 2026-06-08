@@ -34,6 +34,127 @@ void main() {
     });
   });
 
+  group('AppValidators.firstName', () {
+    final validator = AppValidators.firstName(
+      'First name',
+      minLength: 2,
+      maxLength: 30,
+    );
+
+    test('accepts standard names', () {
+      expect(validator('John'), isNull);
+      expect(validator('Carter'), isNull);
+    });
+
+    test('accepts Unicode/diacritics characters like José', () {
+      expect(validator('José'), isNull);
+      expect(validator('Müller'), isNull);
+      expect(validator('François'), isNull);
+    });
+
+    test('accepts spaces like Mary Jane', () {
+      expect(validator('Mary Jane'), isNull);
+    });
+
+    test('accepts hyphens like Anne-Marie', () {
+      expect(validator('Anne-Marie'), isNull);
+      expect(validator('John-Doe'), isNull);
+    });
+
+    test('accepts apostrophes like O\'Connor', () {
+      expect(validator('O\'Connor'), isNull);
+      expect(validator('D\'Angelo'), isNull);
+    });
+
+    test('rejects periods at the end', () {
+      expect(validator('George.'), 'First name must contain letters only.');
+      expect(validator('Jr.'), 'First name must contain letters only.');
+    });
+
+    test('rejects values with digits', () {
+      expect(validator('John3'), 'First name must contain letters only.');
+    });
+
+    test('rejects values with invalid special characters', () {
+      expect(validator('Carter_'), 'First name must contain letters only.');
+      expect(validator('John#'), 'First name must contain letters only.');
+    });
+
+    test('rejects values shorter than minLength', () {
+      expect(validator('A'), 'First name must be at least 2 character long.');
+    });
+
+    test('rejects values longer than maxLength', () {
+      expect(
+        validator('A' * 31),
+        'First name may be at most 30 characters long.',
+      );
+    });
+
+    test('rejects empty values', () {
+      expect(validator(''), 'First name is required.');
+      expect(validator(null), 'First name is required.');
+    });
+  });
+
+  group('AppValidators.lastName', () {
+    final validator = AppValidators.lastName(
+      'Last name',
+      minLength: 2,
+      maxLength: 30,
+    );
+
+    test('accepts standard names', () {
+      expect(validator('John'), isNull);
+      expect(validator('Carter'), isNull);
+    });
+
+    test('accepts Unicode/diacritics characters like José', () {
+      expect(validator('José'), isNull);
+    });
+
+    test('accepts spaces like Mary Jane', () {
+      expect(validator('Mary Jane'), isNull);
+    });
+
+    test('accepts hyphens like Anne-Marie', () {
+      expect(validator('Anne-Marie'), isNull);
+    });
+
+    test('accepts apostrophes like O\'Connor', () {
+      expect(validator('O\'Connor'), isNull);
+    });
+
+    test('accepts periods at the end', () {
+      expect(validator('Jr.'), isNull);
+      expect(validator('Smith.'), isNull);
+    });
+
+    test('rejects values with digits', () {
+      expect(validator('John3'), 'Last name must contain letters only.');
+    });
+
+    test('rejects values with invalid special characters', () {
+      expect(validator('Carter_'), 'Last name must contain letters only.');
+    });
+
+    test('rejects values shorter than minLength', () {
+      expect(validator('A'), 'Last name must be at least 2 character long.');
+    });
+
+    test('rejects values longer than maxLength', () {
+      expect(
+        validator('A' * 31),
+        'Last name may be at most 30 characters long.',
+      );
+    });
+
+    test('rejects empty values', () {
+      expect(validator(''), 'Last name is required.');
+      expect(validator(null), 'Last name is required.');
+    });
+  });
+
   group('AppValidators.petBirthDate', () {
     final today = DateTime(2026, 5, 13);
     late StringValidator validator;
